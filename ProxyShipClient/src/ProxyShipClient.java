@@ -11,7 +11,7 @@ public class ProxyShipClient {
 	public static void main(String[] args) {
 		try (ServerSocket shipServerSoket = new ServerSocket(8080)) {
 			System.out.println("Client Ship running on port 8080");
-			try (Socket connector = new Socket("localhost", 9090)) {
+			try (Socket connector = new Socket("proxy-server", 9090)) {
 				System.out.println("ship and server are connected");
 				BufferedReader serverOutput = new BufferedReader(new InputStreamReader(connector.getInputStream()));
 				BufferedWriter serverInput = new BufferedWriter(new OutputStreamWriter(connector.getOutputStream()));
