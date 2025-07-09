@@ -1,9 +1,14 @@
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketTimeoutException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -11,7 +16,7 @@ public class ProxyShipClient {
 	public static void main(String[] args) {
 		try (ServerSocket shipServerSoket = new ServerSocket(8080)) {
 			System.out.println("Client Ship running on port 8080");
-			try (Socket connector = new Socket("proxy-server", 9090)) {
+			try (Socket connector = new Socket("localhost", 9090)) {
 				System.out.println("ship and server are connected");
 				BufferedReader serverOutput = new BufferedReader(new InputStreamReader(connector.getInputStream()));
 				BufferedWriter serverInput = new BufferedWriter(new OutputStreamWriter(connector.getOutputStream()));
@@ -35,12 +40,24 @@ public class ProxyShipClient {
 			String line;
 			StringBuilder builder = new StringBuilder();
 			while ((line = clientInputt.readLine()) != null && !line.isEmpty()) {
-				
-					builder.append(line).append("\r\n");
-			
-				
+				builder.append(line).append("\r\n");
 			}
 			builder.append("\r\n");
+			System.out.println("Request from browser:\n" + builder.toString());
+			int contentLength = 0;
+			for (String headerLine : builder.toString().split("\r\n")) {
+				if (headerLine.toLowerCase().startsWith("content-length")) {
+					contentLength = Integer.parseInt(headerLine.split(":")[1].trim());
+				}
+			}
+
+			char[] body = new char[contentLength];
+			if (contentLength > 0) {
+				clientInputt.read(body, 0, contentLength);
+				builder.append(body);
+			}
+			System.out.println("Body: " + new String(body));
+
 			input.write(builder.toString());
 			input.flush();
 
@@ -65,4 +82,5 @@ public class ProxyShipClient {
 			System.out.println("Exception occured in process" + e);
 		}
 	}
+
 }
